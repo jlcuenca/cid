@@ -1,0 +1,23 @@
+# GCP Project Configuration
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+
+# Environment
+environment = "dev"
+
+# Firestore
+firestore_location = "us-central"
+
+# Cloud Functions Configuration
+function_runtime       = "python311"
+function_memory        = "512Mi"
+function_timeout       = 300
+function_max_instances = 10
+function_min_instances = 0
+
+# External Services
+acreditta_api_url = "https://api.acreditta.com/v1"
+
+# SIS Database (Legacy System)
+sis_db_host = "your-sis-db-host.example.com"
+sis_db_name = "sis_production"

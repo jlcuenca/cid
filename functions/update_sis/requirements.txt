@@ -1,0 +1,12 @@
+functions-framework==3.*
+google-cloud-secret-manager==2.*
+google-cloud-firestore==2.*
+google-cloud-logging==3.*
+requests==2.*
+pydantic==2.*
+python-dateutil==2.*
+flask==3.*
+# Uncomment based on your SIS database type:
+# psycopg2-binary==2.*  # For PostgreSQL
+# mysql-connector-python==8.*  # For MySQL
+# cx-Oracle==8.*  # For Oracle

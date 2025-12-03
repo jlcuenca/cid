@@ -1,0 +1,40 @@
+{
+  "validation_request": {
+    "student_id": "12345",
+    "course_id": "MATH101",
+    "evaluation_id": "final_exam",
+    "score": 85,
+    "timestamp": "2025-12-03T12:00:00Z"
+  },
+  "badge_issue_request": {
+    "student_id": "12345",
+    "badge_template_id": "math-excellence-2024",
+    "badge_title": "Mathematics Excellence",
+    "course_id": "MATH101",
+    "evaluation_id": "final_exam",
+    "score": 85,
+    "rule_id": "rule-math-excellence"
+  },
+  "sis_update_request": {
+    "student_id": "12345",
+    "badge_id": "badge-abc123",
+    "badge_url": "https://acreditta.com/badges/abc123",
+    "badge_template_id": "math-excellence-2024",
+    "badge_title": "Mathematics Excellence",
+    "course_id": "MATH101",
+    "evaluation_id": "final_exam",
+    "score": 85,
+    "rule_id": "rule-math-excellence",
+    "issued_at": "2025-12-03T12:00:00Z",
+    "workflow_execution_id": "test-workflow-001"
+  },
+  "workflow_event": {
+    "data": {
+      "student_id": "12345",
+      "course_id": "MATH101",
+      "evaluation_id": "final_exam",
+      "score": 85,
+      "timestamp": "2025-12-03T12:00:00Z"
+    }
+  }
+}
