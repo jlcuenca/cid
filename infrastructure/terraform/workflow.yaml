@@ -3,168 +3,123 @@ main:
   steps:
     - init:
         assign:
-          - eventData: $${event.data}
-          - studentId: $${eventData.student_id}
-          - courseId: $${eventData.course_id}
-          - evaluationId: $${eventData.evaluation_id}
-          - score: $${eventData.score}
-          - timestamp: $${eventData.timestamp}
+          - eventData: ${event.data}
+          - studentId: ${eventData.student_id}
+          - courseId: ${eventData.course_id}
+          - evaluationId: ${eventData.evaluation_id}
+          - score: ${eventData.score}
+          - timestamp: ${eventData.timestamp}
     
     - log_start:
         call: sys.log
         args:
-          text: $${"Starting badge issuance workflow for student " + studentId}
+          text: '${studentId}'
           severity: INFO
     
-    # Step 1: Validate Rule
     - validate_rule:
         try:
           call: http.post
           args:
-            url: ${validate_rule_url}
+            url: VALIDATE_RULE_URL_PLACEHOLDER
             auth:
               type: OIDC
             body:
-              student_id: $${studentId}
-              course_id: $${courseId}
-              evaluation_id: $${evaluationId}
-              score: $${score}
-              timestamp: $${timestamp}
+              student_id: ${studentId}
+              course_id: ${courseId}
+              evaluation_id: ${evaluationId}
+              score: ${score}
+              timestamp: ${timestamp}
           result: validationResult
         except:
           as: e
           steps:
-            - log_validation_error:
-                call: sys.log
-                args:
-                  text: $${"Validation failed: " + e.message}
-                  severity: ERROR
             - return_validation_error:
                 return:
-                  status: "VALIDATION_FAILED"
-                  error: $${e.message}
-                  student_id: $${studentId}
+                  status: VALIDATION_FAILED
+                  error: ${e.message}
+                  student_id: ${studentId}
     
     - check_validation:
         switch:
-          - condition: $${validationResult.body.is_valid == false}
+          - condition: ${validationResult.body.is_valid == false}
             steps:
-              - log_no_rule:
-                  call: sys.log
-                  args:
-                    text: $${"No matching rule found for student " + studentId}
-                    severity: INFO
               - return_no_rule:
                   return:
-                    status: "NO_RULE_MATCHED"
-                    student_id: $${studentId}
-                    message: "No badge issuance rule matched the criteria"
+                    status: NO_RULE_MATCHED
+                    student_id: ${studentId}
     
     - extract_badge_info:
         assign:
-          - badgeTemplateId: $${validationResult.body.badge_template_id}
-          - badgeTitle: $${validationResult.body.badge_title}
-          - ruleId: $${validationResult.body.rule_id}
+          - badgeTemplateId: ${validationResult.body.badge_template_id}
+          - badgeTitle: ${validationResult.body.badge_title}
+          - ruleId: ${validationResult.body.rule_id}
     
-    - log_validation_success:
-        call: sys.log
-        args:
-          text: $${"Validation successful. Badge template: " + badgeTemplateId}
-          severity: INFO
-    
-    # Step 2: Call Acreditta API
     - call_acreditta:
         try:
           call: http.post
           args:
-            url: ${call_acreditta_url}
+            url: CALL_ACREDITTA_URL_PLACEHOLDER
             auth:
               type: OIDC
             body:
-              student_id: $${studentId}
-              badge_template_id: $${badgeTemplateId}
-              badge_title: $${badgeTitle}
-              course_id: $${courseId}
-              evaluation_id: $${evaluationId}
-              score: $${score}
-              rule_id: $${ruleId}
+              student_id: ${studentId}
+              badge_template_id: ${badgeTemplateId}
+              badge_title: ${badgeTitle}
+              course_id: ${courseId}
+              evaluation_id: ${evaluationId}
+              score: ${score}
+              rule_id: ${ruleId}
           result: acredittaResult
         except:
           as: e
           steps:
-            - log_acreditta_error:
-                call: sys.log
-                args:
-                  text: $${"Acreditta API call failed: " + e.message}
-                  severity: ERROR
             - return_acreditta_error:
                 return:
-                  status: "BADGE_ISSUANCE_FAILED"
-                  error: $${e.message}
-                  student_id: $${studentId}
-                  badge_template_id: $${badgeTemplateId}
+                  status: BADGE_ISSUANCE_FAILED
+                  error: ${e.message}
+                  student_id: ${studentId}
     
     - extract_badge_result:
         assign:
-          - badgeId: $${acredittaResult.body.badge_id}
-          - badgeUrl: $${acredittaResult.body.badge_url}
-          - issuedAt: $${acredittaResult.body.issued_at}
+          - badgeId: ${acredittaResult.body.badge_id}
+          - badgeUrl: ${acredittaResult.body.badge_url}
+          - issuedAt: ${acredittaResult.body.issued_at}
     
-    - log_badge_issued:
-        call: sys.log
-        args:
-          text: $${"Badge issued successfully. Badge ID: " + badgeId}
-          severity: INFO
-    
-    # Step 3: Update SIS and Log Event
     - update_sis:
         try:
           call: http.post
           args:
-            url: ${update_sis_url}
+            url: UPDATE_SIS_URL_PLACEHOLDER
             auth:
               type: OIDC
             body:
-              student_id: $${studentId}
-              badge_id: $${badgeId}
-              badge_url: $${badgeUrl}
-              badge_template_id: $${badgeTemplateId}
-              badge_title: $${badgeTitle}
-              course_id: $${courseId}
-              evaluation_id: $${evaluationId}
-              score: $${score}
-              rule_id: $${ruleId}
-              issued_at: $${issuedAt}
-              workflow_execution_id: $${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}
+              student_id: ${studentId}
+              badge_id: ${badgeId}
+              badge_url: ${badgeUrl}
+              badge_template_id: ${badgeTemplateId}
+              badge_title: ${badgeTitle}
+              course_id: ${courseId}
+              evaluation_id: ${evaluationId}
+              score: ${score}
+              rule_id: ${ruleId}
+              issued_at: ${issuedAt}
           result: sisResult
         except:
           as: e
           steps:
-            - log_sis_error:
-                call: sys.log
-                args:
-                  text: $${"SIS update failed: " + e.message}
-                  severity: WARNING
             - return_sis_error:
                 return:
-                  status: "SIS_UPDATE_FAILED"
-                  error: $${e.message}
-                  student_id: $${studentId}
-                  badge_id: $${badgeId}
-                  message: "Badge issued but SIS update failed"
-    
-    - log_completion:
-        call: sys.log
-        args:
-          text: $${"Workflow completed successfully for student " + studentId}
-          severity: INFO
+                  status: SIS_UPDATE_FAILED
+                  error: ${e.message}
+                  student_id: ${studentId}
+                  badge_id: ${badgeId}
     
     - return_success:
         return:
-          status: "SUCCESS"
-          student_id: $${studentId}
-          badge_id: $${badgeId}
-          badge_url: $${badgeUrl}
-          badge_title: $${badgeTitle}
-          issued_at: $${issuedAt}
-          sis_updated: $${sisResult.body.updated}
+          status: SUCCESS
+          student_id: ${studentId}
+          badge_id: ${badgeId}
+          badge_url: ${badgeUrl}
+          badge_title: ${badgeTitle}
+          issued_at: ${issuedAt}
+          sis_updated: ${sisResult.body.updated}

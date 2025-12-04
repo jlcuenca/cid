@@ -23,6 +23,8 @@ resource "google_project_service" "required_apis" {
     "firestore.googleapis.com",
     "cloudbuild.googleapis.com",
     "cloudscheduler.googleapis.com",
+    "run.googleapis.com",
+    "artifactregistry.googleapis.com",
   ])
   
   service            = each.key
@@ -335,11 +337,16 @@ resource "google_workflows_workflow" "cca_badge_issue_flow" {
   description     = "Orchestrates badge issuance: VALIDATE → EMIT → NOTIFY"
   service_account = google_service_account.cca_functions.email
   
-  source_contents = templatefile("${path.module}/workflow.yaml", {
-    validate_rule_url  = google_cloudfunctions2_function.validate_rule.service_config[0].uri
-    call_acreditta_url = google_cloudfunctions2_function.call_acreditta.service_config[0].uri
-    update_sis_url     = google_cloudfunctions2_function.update_sis.service_config[0].uri
-  })
+  source_contents = replace(
+    replace(
+      replace(
+        file("${path.module}/workflow.yaml"),
+        "VALIDATE_RULE_URL_PLACEHOLDER", google_cloudfunctions2_function.validate_rule.service_config[0].uri
+      ),
+      "CALL_ACREDITTA_URL_PLACEHOLDER", google_cloudfunctions2_function.call_acreditta.service_config[0].uri
+    ),
+    "UPDATE_SIS_URL_PLACEHOLDER", google_cloudfunctions2_function.update_sis.service_config[0].uri
+  )
   
   labels = {
     environment = var.environment

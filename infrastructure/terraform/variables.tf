@@ -12,7 +12,7 @@ variable "region" {
 variable "firestore_location" {
   description = "Firestore database location"
   type        = string
-  default     = "us-central"
+  default     = "nam5"
 }
 
 variable "environment" {

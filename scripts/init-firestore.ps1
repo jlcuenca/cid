@@ -28,7 +28,8 @@ Write-Host ""
 
 # Get project ID from terraform.tfvars if not provided
 if (-not $ProjectId) {
-    $TerraformDir = Join-Path (Split-Path -Parent $PSScriptRoot) "infrastructure" "terraform"
+    $ScriptDir = Split-Path -Parent $PSScriptRoot
+    $TerraformDir = Join-Path $ScriptDir "infrastructure\terraform"
     $TfVarsFile = Join-Path $TerraformDir "terraform.tfvars"
     
     if (Test-Path $TfVarsFile) {
@@ -68,7 +69,7 @@ gcloud firestore documents create `
     --document-id=rule-math-excellence `
     --data=$rule1
 
-Write-Host "  ✓ Created" -ForegroundColor Green
+Write-Host "  - Created" -ForegroundColor Green
 
 # Sample Rule 2: Computer Science Achievement
 Write-Host "Creating rule: Computer Science Achievement Badge" -ForegroundColor Cyan
@@ -89,7 +90,7 @@ gcloud firestore documents create `
     --document-id=rule-cs-achievement `
     --data=$rule2
 
-Write-Host "  ✓ Created" -ForegroundColor Green
+Write-Host "  - Created" -ForegroundColor Green
 
 # Sample Rule 3: General Course Completion (any evaluation)
 Write-Host "Creating rule: Course Completion Badge" -ForegroundColor Cyan
@@ -109,15 +110,15 @@ gcloud firestore documents create `
     --document-id=rule-course-completion `
     --data=$rule3
 
-Write-Host "  ✓ Created" -ForegroundColor Green
+Write-Host "  - Created" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "=== Firestore Initialization Complete ===" -ForegroundColor Green
 Write-Host ""
 Write-Host "Sample rules created:" -ForegroundColor Cyan
-Write-Host "  1. MATH101 final_exam (score ≥ 80) → Mathematics Excellence" -ForegroundColor Gray
-Write-Host "  2. CS101 final_project (score ≥ 85) → Computer Science Achievement" -ForegroundColor Gray
-Write-Host "  3. GEN100 any evaluation (score ≥ 70) → Course Completion" -ForegroundColor Gray
+Write-Host "  1. MATH101 final_exam (score >= 80) -> Mathematics Excellence" -ForegroundColor Gray
+Write-Host "  2. CS101 final_project (score >= 85) -> Computer Science Achievement" -ForegroundColor Gray
+Write-Host "  3. GEN100 any evaluation (score >= 70) -> Course Completion" -ForegroundColor Gray
 Write-Host ""
 Write-Host "View rules:" -ForegroundColor Cyan
 Write-Host "  gcloud firestore documents list --collection=reglas_emision --project=$ProjectId" -ForegroundColor White
