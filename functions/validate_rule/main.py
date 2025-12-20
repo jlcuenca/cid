@@ -51,11 +51,12 @@ def validate_rule(request: Request):
         # Validate input using Pydantic
         validation_request = ValidationRequest(**request_json)
         
-        # Initialize Firestore client
+        # Initialize clients
         config = Config.from_env()
         db_client = FirestoreClient(config)
+        moodle_client = MoodleClient(api_url="https://moodle.example.com", token="mock-token")
         
-        # Find matching rule
+        # 1. Check for legacy simple rules first
         matching_rule = db_client.get_matching_rule(
             course_id=validation_request.course_id,
             evaluation_id=validation_request.evaluation_id,
@@ -63,7 +64,7 @@ def validate_rule(request: Request):
         )
         
         if matching_rule:
-            logger.info(f"Found matching rule: {matching_rule.rule_id}")
+            logger.info(f"Found matching legacy rule: {matching_rule.rule_id}")
             result = ValidationResult(
                 is_valid=True,
                 rule_id=matching_rule.rule_id,
@@ -71,8 +72,49 @@ def validate_rule(request: Request):
                 badge_title=matching_rule.badge_title,
                 reason=f"Score {validation_request.score} meets minimum {matching_rule.min_score}"
             )
+            return jsonify(result.model_dump(mode="json")), 200
+
+        # 2. Check for advanced pedagogical rules
+        # Fetch student attributes (SIS Connector)
+        student_attrs = moodle_client.get_student_attributes(validation_request.student_id)
+        
+        # Prepare facts for evaluation
+        facts = {
+            "score": validation_request.score,
+            "course_id": validation_request.course_id,
+            "evaluation_id": validation_request.evaluation_id,
+            "attribute": student_attrs
+        }
+        
+        # Query for advanced rules in Firestore (this is a simplified example)
+        # In a real scenario, we would query a specific collection for LearningPath rules
+        pedagogical_db = PedagogicalDBClient(config)
+        # For demonstration, let's assume we search for rules linked to this course
+        # This part is illustrative of how the RuleEvaluator would be used
+        
+        logger.info(f"Evaluating advanced rules with facts: {facts}")
+        
+        # Example of a hardcoded advanced rule for demonstration
+        demo_rule = AdvancementRule(
+            id="adv-rule-001",
+            name="Excellence for Scholarship Students",
+            conditions=[
+                Condition(field="score", operator=">=", value=90),
+                Condition(field="attribute.becado", operator="==", value=True)
+            ]
+        )
+        
+        if RuleEvaluator.evaluate(demo_rule, facts):
+            logger.info("Advanced rule matched!")
+            result = ValidationResult(
+                is_valid=True,
+                rule_id=demo_rule.id,
+                badge_template_id="excellence-scholar-badge",
+                badge_title="Excelencia Académica (Becado)",
+                reason="Met score >= 90 and has scholarship"
+            )
         else:
-            logger.info("No matching rule found")
+            logger.info("No matching rule found (legacy or advanced)")
             result = ValidationResult(
                 is_valid=False,
                 reason="No rule matched the criteria"

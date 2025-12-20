@@ -4,7 +4,7 @@ Defines API contracts for all Cloud Functions.
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
 
 
@@ -36,8 +36,23 @@ class ValidationResult(BaseModel):
     reason: Optional[str] = Field(None, description="Validation reason/message")
 
 
+class BadgeAlignment(BaseModel):
+    """Alignment to educational standards or competencies (OB 3.0)."""
+    target_name: str
+    target_url: str
+    target_description: Optional[str] = None
+    target_code: Optional[str] = None
+
+class BadgeEvidence(BaseModel):
+    """Evidence justifying the badge issuance (OB 3.0)."""
+    id: str
+    narrative: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    genre: Optional[str] = None  # e.g., "Assessment", "Portfolio"
+
 class BadgeIssueRequest(BaseModel):
-    """Request to issue a badge via Acreditta."""
+    """Request to issue a badge via Acreditta with OB 3.0 metadata."""
     student_id: str
     badge_template_id: str
     badge_title: str
@@ -45,6 +60,10 @@ class BadgeIssueRequest(BaseModel):
     evaluation_id: str
     score: float
     rule_id: str
+    # OB 3.0 specific fields
+    criteria_narrative: Optional[str] = Field(None, description="Pedagogical criteria for the badge")
+    alignments: List[BadgeAlignment] = Field(default_factory=list)
+    evidence: List[BadgeEvidence] = Field(default_factory=list)
     metadata: Optional[Dict[str, Any]] = None
 
 
